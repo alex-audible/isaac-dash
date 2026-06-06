@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Isaac Dash — Parkour Runner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="game-root">
+  <canvas id="scene"></canvas>
+
+  <!-- ===== Top HUD ===== -->
+  <div id="hud" class="hidden">
+    <div class="hud-top">
+      <div class="hud-score">
+        <div class="score-val" id="scoreVal">0</div>
+        <div class="score-lbl">SCORE</div>
+      </div>
+      <div class="hud-level">
+        <div class="level-name" id="levelName">DAWN GRID</div>
+        <div class="level-bar"><div class="level-fill" id="levelFill"></div></div>
+      </div>
+      <div class="hud-coins">
+        <div class="coin-chip"><span class="coin-dot"></span><span id="coinVal">0</span></div>
+        <div class="hud-hp" id="hudHp"></div>
+      </div>
+    </div>
+    <div class="hud-multi" id="hudMulti">
+      <svg viewBox="0 0 44 44" class="combo-ring"><circle class="combo-track" cx="22" cy="22" r="19"></circle><circle class="combo-prog" id="comboProg" cx="22" cy="22" r="19"></circle></svg>
+      <div class="multi-val" id="multiVal">x1</div>
+    </div>
+    <div class="hud-powers" id="hudPowers"></div>
+    <button id="pauseBtn" class="icon-btn" aria-label="Pause">❚❚</button>
+  </div>
+
+  <!-- ===== Start screen ===== -->
+  <div id="startScreen" class="screen">
+    <div class="sky-orbs"></div>
+    <div class="start-inner">
+      <div class="logo">
+        <div class="logo-sky">ISAAC</div>
+        <div class="logo-dash">DASH</div>
+        <div class="logo-tag">// PARKOUR RUNNER</div>
+      </div>
+      <button id="playBtn" class="btn btn-primary btn-xl">PLAY</button>
+      <div class="start-stats">
+        <div class="stat"><div class="stat-num" id="startBest">0</div><div class="stat-lbl">BEST</div></div>
+        <div class="stat"><div class="stat-num coin"><span class="coin-dot"></span><span id="startCoins">0</span></div><div class="stat-lbl">COINS</div></div>
+      </div>
+      <div class="start-actions">
+        <button id="shopBtn" class="btn btn-ghost">GARAGE</button>
+        <button id="howBtn" class="btn btn-ghost">HOW TO PLAY</button>
+        <button id="soundBtn" class="btn btn-ghost">SOUND: ON</button>
+      </div>
+    </div>
+    <div class="credit">a three.js parkour runner</div>
+  </div>
+
+  <!-- ===== How to play ===== -->
+  <div id="howScreen" class="screen hidden">
+    <div class="panel">
+      <h2 class="panel-title">HOW TO PLAY</h2>
+      <div class="how-grid">
+        <div class="how-item"><div class="how-key">◀ ▶</div><div class="how-txt">Move lanes — push past the edge to leap onto a side wall</div></div>
+        <div class="how-item"><div class="how-key">▲ / SPACE</div><div class="how-txt">Jump — on a wall it's a wall-jump</div></div>
+        <div class="how-item"><div class="how-key">▼</div><div class="how-txt">Slide under beams</div></div>
+        <div class="how-item"><div class="how-key">SWIPE</div><div class="how-txt">On touch: swipe to move, jump &amp; slide</div></div>
+      </div>
+      <div class="how-powers">
+        <div class="pwr pwr-magnet"><span class="pwr-ic"></span>Magnet — pulls in coins</div>
+        <div class="pwr pwr-shield"><span class="pwr-ic"></span>Shield — survive one hit</div>
+        <div class="pwr pwr-boost"><span class="pwr-ic"></span>Boost — fly fast &amp; invincible</div>
+      </div>
+      <p class="how-note">When a <b>wall of blocks</b> spans every lane, leap onto a side wall and run it — <b>wall-jump</b> over the wall-spikes. Chain coins to grow your <b>multiplier</b>. Reach the distance goal to clear the level and spend coins on new runners in the Garage.</p>
+      <button id="howBack" class="btn btn-primary">GOT IT</button>
+    </div>
+  </div>
+
+  <!-- ===== Garage / Shop ===== -->
+  <div id="shopScreen" class="screen hidden">
+    <div class="panel panel-wide">
+      <div class="shop-head">
+        <h2 class="panel-title" id="shopTitle">GARAGE</h2>
+        <div class="coin-chip big"><span class="coin-dot"></span><span id="shopCoins">0</span></div>
+      </div>
+      <div class="avatar-grid" id="avatarGrid"></div>
+      <button id="shopBack" class="btn btn-primary">BACK</button>
+    </div>
+  </div>
+
+  <!-- ===== Level complete ===== -->
+  <div id="levelScreen" class="screen hidden">
+    <div class="panel">
+      <div class="burst">LEVEL CLEAR</div>
+      <h2 class="panel-title" id="levelClearName">DAWN GRID</h2>
+      <div class="reward-row">
+        <div class="reward"><div class="reward-num" id="lvlDist">0m</div><div class="reward-lbl">DISTANCE</div></div>
+        <div class="reward"><div class="reward-num coin"><span class="coin-dot"></span><span id="lvlCoins">0</span></div><div class="reward-lbl">COLLECTED</div></div>
+      </div>
+      <p class="how-note">Next up: <b id="nextLevelName">NEON NIGHT</b> — faster &amp; tougher.</p>
+      <div class="lvl-actions">
+        <button id="lvlShop" class="btn btn-ghost">GARAGE</button>
+        <button id="lvlNext" class="btn btn-primary">CONTINUE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Game over ===== -->
+  <div id="overScreen" class="screen hidden">
+    <div class="panel">
+      <div class="burst burst-red">WIPEOUT</div>
+      <div class="over-score" id="overScore">0</div>
+      <div class="over-lbl">SCORE</div>
+      <div class="reward-row">
+        <div class="reward"><div class="reward-num" id="overBest">0</div><div class="reward-lbl">BEST</div></div>
+        <div class="reward"><div class="reward-num coin"><span class="coin-dot"></span><span id="overCoins">0</span></div><div class="reward-lbl">COINS +</div></div>
+      </div>
+      <div class="over-actions">
+        <button id="overHome" class="btn btn-ghost">HOME</button>
+        <button id="overRetry" class="btn btn-primary">RETRY</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Pause ===== -->
+  <div id="pauseScreen" class="screen hidden">
+    <div class="panel panel-narrow">
+      <h2 class="panel-title">PAUSED</h2>
+      <div class="over-actions col">
+        <button id="resumeBtn" class="btn btn-primary">RESUME</button>
+        <button id="restartBtn" class="btn btn-ghost">RESTART</button>
+        <button id="quitBtn" class="btn btn-ghost">QUIT TO MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Countdown ===== -->
+  <div id="countdown" class="hidden"></div>
+
+  <!-- ===== Loading ===== -->
+  <div id="loading">
+    <div class="load-logo">ISAAC DASH</div>
+    <div class="load-bar"><div class="load-fill"></div></div>
+    <div class="load-txt">building the skyline…</div>
+  </div>
+</div>
+
+<script type="module">
+  // Resilient bootstrap: a cold first unpkg fetch can lose the race and never retry.
+  const txt = document.querySelector('.load-txt');
+  async function go(attempt=1){
+    try{ await import('./js/main.js?v='+attempt); }
+    catch(e){
+      console.error('boot attempt '+attempt+' failed', e);
+      if(attempt<5){ if(txt) txt.textContent='warming up the engines…'; setTimeout(()=>go(attempt+1), 450*attempt); }
+      else if(txt){ txt.textContent='Network hiccup — tap to retry'; txt.style.cursor='pointer'; txt.onclick=()=>{ txt.textContent='building the skyline…'; go(1); }; }
+    }
+  }
+  go();
+</script>
+</body>
+</html>
